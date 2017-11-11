@@ -3,6 +3,7 @@
 require 'bagit'
 
 input=ARGV
+TargetBags = Array.new
 
 def Create_manifest(input)
 #Check and limit input
@@ -20,11 +21,21 @@ def Create_manifest(input)
   #Get list of directories
   Dir.chdir(input)
   bag_list = Dir.glob('*').select {|f| File.directory? f}
-  #Verify all directories have valid bagit oxums
+  #Check if directories are bags (contains metadata files)
   bag_list.each do |isbag|
-    bag = BagIt::Bag.new isbag
-    if ! bag.valid?
-      puts "oops"
+    if ! File.exist?("#{isbag}/bag-info.txt") || ! File.exist?("#{isbag}/bagit.txt")
+      puts "Warning! Unbagged directory found at -- #{isbag} Exiting"
+    end
+  end
+  exit
+  #Verify all bags are valid bags
+  bag_list.each do |isvalidbag|
+    bag = BagIt::Bag.new isvalidbag
+    if bag.valid?
+      TargetBags << isvalidbag
+    else
+      puts "Warning! Invalid Bag Detected! Dumping List of Validated Bags and Exiting!"
+
     end
   end
 end
