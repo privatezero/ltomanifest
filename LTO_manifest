@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'bagit'
+require 'yaml'
 
 input=ARGV
 TargetBags = Array.new
@@ -20,23 +21,35 @@ def Create_manifest(input)
   end
   #Get list of directories
   Dir.chdir(input)
-  bag_list = Dir.glob('*').select {|f| File.directory? f}
+  bag_list = Dir.glob('*')
+  #Check if supposed bags are actually directories
+  bag_list.each do |isdirectory|
+    if ! File.directory?(isdirectory)
+      puts "Warning! Files not contained in bags found at -- #{isdirectory} -- Exiting."
+      exit
+    end
+  end
   #Check if directories are bags (contains metadata files)
   bag_list.each do |isbag|
     if ! File.exist?("#{isbag}/bag-info.txt") || ! File.exist?("#{isbag}/bagit.txt")
-      puts "Warning! Unbagged directory found at -- #{isbag} Exiting"
+      puts "Warning! Unbagged directory found at -- #{isbag} Exiting."
     end
   end
-  exit
+
   #Verify all bags are valid bags
   bag_list.each do |isvalidbag|
     bag = BagIt::Bag.new isvalidbag
     if bag.valid?
       TargetBags << isvalidbag
     else
-      puts "Warning! Invalid Bag Detected! Dumping List of Validated Bags and Exiting!"
-
+      puts "Warning! Invalid Bag Detected at -- #{isvalidbag} -- Dumping List of Validated Bags and Exiting!"
+        data = {"ConfirmedBags" => TargetBags}
+        File.write('BagListDump.txt',data.to_yaml)
+      exit
     end
+  #Gather checksums from individual bags
+
+  #Write manifest of bags and checksums
   end
 end
 
