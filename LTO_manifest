@@ -29,6 +29,7 @@ def Create_manifest(input)
       exit
     end
   end
+
   #Check if directories are bags (contains metadata files)
   bag_list.each do |isbag|
     if ! File.exist?("#{isbag}/bag-info.txt") || ! File.exist?("#{isbag}/bagit.txt")
@@ -47,10 +48,18 @@ def Create_manifest(input)
         File.write('BagListDump.txt',data.to_yaml)
       exit
     end
+  end
+  targetBagsSorted = TargetBags.sort
   #Gather checksums from individual bags
+  targetBagsSorted.each do |bagparse|
+    metafile = "#{bagparse}/manifest-md5.txt"
+    contents = File.readlines(metafile)
+    puts "---"
+    puts bagparse
+    puts contents
+  end
 
   #Write manifest of bags and checksums
-  end
 end
 
 
