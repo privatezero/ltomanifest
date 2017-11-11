@@ -1,7 +1,33 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/env ruby
 
-ARGV.each do |input|
-  puts input
+require 'bagit'
+
+input=ARGV
+
+def Create_manifest(input)
+#Check and limit input
+  if input.length > 1
+    puts "Please only use one directory as input. Exiting."
+    exit
+  else
+    input = input[0]
+  end
+
+  if ! File.directory?(input)
+    puts "Input is not a valid directory. Exiting"
+    exit
+  end
+  #Get list of directories
+  Dir.chdir(input)
+  bag_list = Dir.glob('*').select {|f| File.directory? f}
+  #Verify all directories have valid bagit oxums
+  bag_list.each do |isbag|
+    bag = BagIt::Bag.new isbag
+    if ! bag.valid?
+      puts "oops"
+    end
+  end
 end
 
-puts ARGV.length
+
+Create_manifest(input)
