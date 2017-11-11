@@ -1,0 +1,1 @@
+## Make manifest for LTO
