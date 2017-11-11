@@ -1,0 +1,7 @@
+#!/usr/local/bin/ruby
+
+ARGV.each do |input|
+  puts input
+end
+
+puts ARGV.length
