@@ -39,14 +39,17 @@ end
 def Create_manifest(input)
 #Check and limit input
   if input.length > 1
-    puts "Please only use one directory as input. Exiting."
+    red("Please only use one directory as input. Exiting.")
     exit
   else
     input = input[0]
   end
 
   if ! File.directory?(input)
-    puts "Input is not a valid directory. Exiting"
+    red("Input is not a valid directory. Exiting")
+    exit
+  elsif File.exist?("#{input}/manifest.txt")
+    red("#{input}/manifest.txt already exists. Exiting.")
     exit
   end
   #Get list of directories
@@ -55,7 +58,7 @@ def Create_manifest(input)
   #Check if supposed bags are actually directories
   bag_list.each do |isdirectory|
     if ! File.directory?(isdirectory)
-      puts "Warning! Files not contained in bags found at -- #{isdirectory} -- Exiting."
+      red("Warning! Files not contained in bags found at -- #{isdirectory} -- Exiting.")
       exit
     end
   end
@@ -63,7 +66,7 @@ def Create_manifest(input)
   #Check if directories are bags (contains metadata files)
   bag_list.each do |isbag|
     if ! File.exist?("#{isbag}/bag-info.txt") || ! File.exist?("#{isbag}/bagit.txt")
-      puts "Warning! Unbagged directory found at -- #{isbag} Exiting."
+      red("Warning! Unbagged directory found at -- #{isbag} Exiting.")
     end
   end
 
@@ -73,7 +76,7 @@ def Create_manifest(input)
     if bag.valid?
       TargetBags << isvalidbag
     else
-      puts "Warning! Invalid Bag Detected at -- #{isvalidbag} -- Dumping List of Validated Bags and Exiting!"
+      red("Warning! Invalid Bag Detected at -- #{isvalidbag} -- Dumping List of Validated Bags and Exiting!")
         data = {"ConfirmedBags" => TargetBags}
         File.write('BagListDump.txt',data.to_yaml)
       exit
@@ -92,23 +95,32 @@ def Create_manifest(input)
   #Write manifest of bags and checksums
   data = {"Bag List" => targetBagsSorted, "Contents" => bagcontents}
   File.write('manifest.txt',data.to_yaml)
-  puts "Manifest written at #{input}/manifest.txt"
+  green("Manifest written at #{input}/manifest.txt")
 end
 
 def Auditmanifest(input)
+  #Confirm input
   if input.length > 1
-    puts "Please only use one maifest file as input. Exiting."
-    exit
+    red("Please only use one maifest file as input. Exiting.")
+    exit  
   else
     input = input[0]
   end
+  if ! File.exist?(input)
+    red("Please use a valid input file")
+    exit
+  end
+  #Read manifest file
   manifestlocation = File.dirname(input)
-  manifestinfo = YAML::load_file(input)
+  manifestinfo = YAML::load_file(input) || red(error)
   bags = manifestinfo['Bag List']
   Dir.chdir(manifestlocation)
   #Confirm validity of all bags listed in manifest file
   confirmedBags = Array.new
   problemBags = Array.new
+  if bags.empty?
+    red 'No Bag Information Found. Please Confirm Manifest'
+  end
   bags.each do |isvalidbag|
     bag = BagIt::Bag.new isvalidbag
     if bag.valid?
