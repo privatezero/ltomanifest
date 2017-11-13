@@ -4,16 +4,16 @@ require 'bagit'
 require 'yaml'
 require 'optparse'
 
-options = {}
+option = {}
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ltomanifest.rb [option] [inputfile]"
 
   opts.on("-m", "--make", "Make manifest") do |e|
-    options[:make] = 'make'
+    option = 'make'
   end
   opts.on("-c", "--confirm", "Confirm manifest") do |d|
-    options[:create] = 'create'
+    option = 'confirm'
   end
   opts.on("-h", "--help", "Help") do
     puts opts
@@ -86,17 +86,42 @@ def Create_manifest(input)
   File.write('manifest.txt',data.to_yaml)
 end
 
-def auditmanifest(input)
+def Auditmanifest(input)
+  if input.length > 1
+    puts "Please only use one maifest file as input. Exiting."
+    exit
+  else
+    input = input[0]
+  end
   manifestlocation = File.dirname(input)
   manifestinfo = YAML::load_file(input)
-  bags = package['Bag List']
+  bags = manifestinfo['Bag List']
   Dir.chdir(manifestlocation)
+  #Confirm validity of all bags listed in manifest file
+  confirmedBags = Array.new
+  problemBags = Array.new
   bags.each do |isvalidbag|
     bag = BagIt::Bag.new isvalidbag
     if bag.valid?
       puts "Contents Confirmed: #{isvalidbag}"
+      confirmedBags << isvalidbag
+    else
+      puts "Warning: Invalid bag found at -- #{isvalidbag}"
+      problemBags << isvalidbags
     end
+  end
+  #List warning of problem bags
+  if problemBags.length > 0
+    puts "These Bags Failed Verification"
+    puts problemBags
+  else
+    puts "All Bags Verified Successfully"
   end
 end
 
-Create_manifest(input)
+if option == 'make'
+  Create_manifest(input)
+end
+if option == 'confirm'
+  Auditmanifest(input)
+end
