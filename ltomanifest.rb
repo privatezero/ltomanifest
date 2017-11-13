@@ -2,6 +2,27 @@
 
 require 'bagit'
 require 'yaml'
+require 'optparse'
+
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: ltomanifest.rb [option] [inputfile]"
+
+  opts.on("-m", "--make", "Make manifest") do |e|
+    options[:make] = 'make'
+  end
+  opts.on("-c", "--confirm", "Confirm manifest") do |d|
+    options[:create] = 'create'
+  end
+  opts.on("-h", "--help", "Help") do
+    puts opts
+    exit
+  end
+  if ARGV.empty?
+    puts opts
+  end
+end.parse!
 
 input=ARGV
 TargetBags = Array.new
@@ -50,17 +71,32 @@ def Create_manifest(input)
     end
   end
   targetBagsSorted = TargetBags.sort
+  bagcontents = Array.new
   #Gather checksums from individual bags
   targetBagsSorted.each do |bagparse|
     metafile = "#{bagparse}/manifest-md5.txt"
     contents = File.readlines(metafile)
-    puts "---"
-    puts bagparse
-    puts contents
+    bagcontents << bagparse
+    bagcontents << contents
   end
+  puts bagcontents
 
   #Write manifest of bags and checksums
+  data = {"Bag List" => targetBagsSorted, "Contents" => bagcontents}
+  File.write('manifest.txt',data.to_yaml)
 end
 
+def auditmanifest(input)
+  manifestlocation = File.dirname(input)
+  manifestinfo = YAML::load_file(input)
+  bags = package['Bag List']
+  Dir.chdir(manifestlocation)
+  bags.each do |isvalidbag|
+    bag = BagIt::Bag.new isvalidbag
+    if bag.valid?
+      puts "Contents Confirmed: #{isvalidbag}"
+    end
+  end
+end
 
 Create_manifest(input)
