@@ -48,8 +48,8 @@ def Create_manifest(input)
   if ! File.directory?(input)
     red("Input is not a valid directory. Exiting")
     exit
-  elsif File.exist?("#{input}/manifest.txt")
-    red("#{input}/manifest.txt already exists. Exiting.")
+  elsif File.exist?("#{input}/tapemanifest.txt")
+    red("#{input}/tapemanifest.txt already exists. Exiting.")
     exit
   end
   #Get list of directories
@@ -94,8 +94,8 @@ def Create_manifest(input)
 
   #Write manifest of bags and checksums
   data = {"Bag List" => targetBagsSorted, "Contents" => bagcontents}
-  File.write('manifest.txt',data.to_yaml)
-  green("Manifest written at #{input}/manifest.txt")
+  File.write('tapemanifest.txt',data.to_yaml)
+  green("Manifest written at #{input}/tapemanifest.txt")
 end
 
 def Auditmanifest(input)
@@ -142,7 +142,8 @@ end
 
 if option == 'make'
   Create_manifest(input)
-end
-if option == 'confirm'
+elsif option == 'confirm'
   Auditmanifest(input)
+else
+  puts "You must use an option"
 end
