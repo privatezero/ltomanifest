@@ -27,6 +27,15 @@ end.parse!
 input=ARGV
 TargetBags = Array.new
 
+# Methods for colored text output
+def red(input)
+  puts "\e[31m#{input}\e[0m"
+end
+
+def green(input)
+  puts "\e[36m#{input}\e[0m"
+end
+
 def Create_manifest(input)
 #Check and limit input
   if input.length > 1
@@ -79,11 +88,11 @@ def Create_manifest(input)
     bagcontents << bagparse
     bagcontents << contents
   end
-  puts bagcontents
 
   #Write manifest of bags and checksums
   data = {"Bag List" => targetBagsSorted, "Contents" => bagcontents}
   File.write('manifest.txt',data.to_yaml)
+  puts "Manifest written at #{input}/manifest.txt"
 end
 
 def Auditmanifest(input)
@@ -103,19 +112,19 @@ def Auditmanifest(input)
   bags.each do |isvalidbag|
     bag = BagIt::Bag.new isvalidbag
     if bag.valid?
-      puts "Contents Confirmed: #{isvalidbag}"
+      green("Contents Confirmed: #{isvalidbag}")
       confirmedBags << isvalidbag
     else
       puts "Warning: Invalid bag found at -- #{isvalidbag}"
-      problemBags << isvalidbags
+      problemBags << isvalidbag
     end
   end
   #List warning of problem bags
   if problemBags.length > 0
-    puts "These Bags Failed Verification"
-    puts problemBags
+    red("These Bags Failed Verification")
+    red(problemBags)
   else
-    puts "All Bags Verified Successfully"
+    green("All Bags Verified Successfully")
   end
 end
 
